@@ -1,0 +1,116 @@
+name: Deploy Text-Review to GitHub Container Registry (GHCR)
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 1. Check out code
+        uses: actions/checkout@v4
+      
+      - name: 2. Set lower case repository name
+        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: 3. Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: 4. Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 5. Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 6. Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.ref_name }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: 7. Build and Push ARM64 Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/arm64
+          tags: |
+            ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ghcr.io/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+
+  deploy_staging:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.textreview.org
+    steps:
+      - name: Checkout Ansible Playbook Repository
+        uses: actions/checkout@v4
+        with:
+          repository: pjurke/pjurke-ansible-playbooks
+          path: 'playbooks'
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+
+      - name: Install Ansible Dependencies (Roles & Collections)
+        run: ansible-galaxy install -r playbooks/requirements.yml
+
+      - name: Deploy to Staging
+        uses: dawidd6/action-ansible-playbook@v2
+        env:
+          ANSIBLE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          playbook: playbooks/deploy-app.yml
+          directory: ./
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          vault_password: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+          options: |
+            --inventory playbooks/inventory.ini
+            --extra-vars "app_name=textreview env=staging image_tag=${{ github.sha }} GITHUB_USERNAME=${{ github.actor }} GITHUB_TOKEN=${{ env.ANSIBLE_GITHUB_TOKEN }}"
+
+  deploy_production:
+    needs: deploy_staging
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://textreview.org
+    steps:
+      - name: Checkout Ansible Playbook Repository
+        uses: actions/checkout@v4
+        with:
+          repository: pjurke/pjurke-ansible-playbooks
+          path: 'playbooks'
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+
+      - name: Install Ansible Dependencies (Roles & Collections)
+        run: ansible-galaxy install -r playbooks/requirements.yml
+
+      - name: Deploy to Production
+        uses: dawidd6/action-ansible-playbook@v2
+        env:
+          ANSIBLE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          playbook: playbooks/deploy-app.yml
+          directory: ./
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          vault_password: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+          options: |
+            --inventory playbooks/inventory.ini
+            --extra-vars "app_name=textreview env=production image_tag=${{ github.sha }} GITHUB_USERNAME=${{ github.actor }} GITHUB_TOKEN=${{ env.ANSIBLE_GITHUB_TOKEN }}"
