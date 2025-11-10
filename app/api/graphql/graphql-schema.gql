@@ -1,0 +1,94 @@
+# ----- OPERATIONS
+
+type Query {
+
+    """ Retrieve a text document by its ID. """
+    textDocument(id: ID!): TextDocument
+
+    """ Retrieve a list of text documents """
+    textDocuments: [TextDocumentSummary!]!
+
+    #""" Retrieve a text analysis by its ID. """
+    # textAnalysis(id: ID!): TextAnalysis
+
+}
+
+#type Mutation {
+
+    #""" Create a new text analysis based on an existing text document. """
+    # createTextAnalysis(textDocumentId: ID!): CreateTextAnalysisResponse!
+
+    #""" Add a highlight to a text analysis. """
+    # addHighlight(textAnalysisId: ID!, paragraphId: ID!, start: Int!, end: Int!): Highlight
+
+    #""" Remove an existing highlight from a text analysis. """
+    # removeHighlight(textAnalysisId: ID!, paragraphId: ID!, highlightId: ID!): RemoveHighlightResponse!
+
+#}
+
+# ----- SCALAR TYPES
+
+scalar JSON
+
+# ----- MAIN TYPES
+
+""" A text document containing paragraphs. """
+type TextDocument {
+    id: ID!
+    title: String!
+    author: String
+    type: TextDocumentType!
+    meta: JSON
+    paragraphs: [Paragraph!]!
+}
+
+enum TextDocumentType {
+  SPEECH
+  UNKNOWN
+}
+
+""" A single paragraph of a text document. """
+type Paragraph {
+    id: ID!
+    text: String!
+}
+
+""" An analysis of an existing text document. """
+type TextAnalysis {
+    id: ID!
+    title: String!
+    author: String
+    paragraphs: [ParagraphAnalysis!]!
+}
+
+""" A paragraph with the analysis of its text. """
+type ParagraphAnalysis {
+    id: ID!
+    text: String!
+    highlights: [Highlight!]!
+}
+
+""" A highlighted range within a paragraph. """
+type Highlight {
+    id: ID!
+    start: Int!
+    end: Int!
+}
+
+# ----- RESPONSE TYPES
+
+type CreateTextAnalysisResponse {
+    id: String
+}
+
+""" Response returned after removing a highlight. """
+type RemoveHighlightResponse {
+    success: Boolean!
+}
+
+""" A summary of a text document """
+type TextDocumentSummary {
+    id: ID!
+    title: String!
+    author: String
+}
