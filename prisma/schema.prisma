@@ -2,48 +2,75 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 // Every change needs to be followed by a `npx prisma generate` command to update the Prisma Client.
 
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
-}
-/*
-  ----- TEXT DOCUMENT -----
-*/
+// ----------------------------------
+// TEXT DOCUMENT
+// ----------------------------------
 
+/// A text document (e.g. speech, article, etc.), independent of language.
 model TextDocument {
-  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  id              String            @id @default(cuid(2))
+  createdAt       DateTime          @default(now())
+
+  /// The author(s) contributing to this document.
+  authors         Author[]          @relation("TextAuthors")
+
+  /// Language-specific variants of this document.
+  variants        TextVariant[]
+}
+
+/// A language-specific variant of a text document (ISO 639-1 language code).
+model TextVariant {
+  id              String            @id @default(cuid(2))
+  languageCode    String                                          // e.g. "en", "de", "fr"
   title           String
-  author          String
-  type            TextDocumentType  @default(UNKNOWN)
-  meta            Json?
+  createdAt       DateTime          @default(now())
+
+  /// Paragraphs that make up this specific language version.
   paragraphs      Paragraph[]
-  textAnalyses    TextAnalysis[]
+
+  /// Parent document reference.
+  textDocument    TextDocument      @relation(fields: [textDocumentId], references: [id])
+  textDocumentId  String
+
+  /// Ensures a document has at most one variant per language.
+  @@unique([textDocumentId, languageCode])
 }
 
-enum TextDocumentType {
-  SPEECH
-  UNKNOWN
-}
-
+/// A paragraph belonging to a specific language variant of a text document.
 model Paragraph {
-  id                  String       @id @default(auto()) @map("_id") @db.ObjectId
-  text                String
+  id              String            @id @default(cuid(2))
+  order           Int
+  content         String
 
-  documentId          String       @db.ObjectId
-  textDocument        TextDocument @relation(fields: [documentId], references: [id])
-
-  paragraphAnalyses   ParagraphAnalysis[]
+  /// Reference to the parent TextVariant.
+  textVariant     TextVariant       @relation(fields: [textVariantId], references: [id])
+  textVariantId   String
 }
 
-/*
-  ----- TEXT ANALYSIS -----
-*/
+/// An author who writes or contributes to one or more text documents.
+model Author {
+  id              String            @id @default(cuid(2))
+  name            String
+  createdAt       DateTime          @default(now())
 
-model TextAnalysis {
+  /// Documents authored or co-authored by this person.
+  textDocuments   TextDocument[]    @relation("TextAuthors")
+}
+
+// ----------------------------------
+// TEXT ANALYSIS
+// ----------------------------------
+
+/*model TextAnalysis {
   id                String                @id @default(auto()) @map("_id") @db.ObjectId
 
   textDocumentId    String                @db.ObjectId
@@ -71,7 +98,7 @@ model Highlight {
 
   paragraphAnalysisId String            @db.ObjectId
   analysis            ParagraphAnalysis @relation(fields: [paragraphAnalysisId], references: [id])
-}
+}*/
 
 /*
   ----- NEXT-AUTH -----
