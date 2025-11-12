@@ -1,4 +1,13 @@
-# ----- OPERATIONS
+# ----------------------------------
+# SCALAR TYPES
+# ----------------------------------
+
+"""ISO 8601 datetime string (e.g. 2025-11-12T18:30:00Z)."""
+scalar DateTime
+
+# ----------------------------------
+# OPERATIONS
+# ----------------------------------
 
 type Query {
 
@@ -26,65 +35,66 @@ type Query {
 
 #}
 
-# ----- SCALAR TYPES
+# ----------------------------------
+# TYPES
+# ----------------------------------
 
-scalar JSON
+"""An author who contributes to one or more text documents."""
+type Author {
+    id: ID!
+    name: String!
+    createdAt: DateTime!
+}
 
-# ----- MAIN TYPES
+"""A paragraph belonging to a specific language variant of a text document."""
+type Paragraph {
+    id: ID!
+    order: Int!
+    content: String!
+}
 
-""" A text document containing paragraphs. """
+"""A text document (e.g. speech, article, etc.), independent of language."""
 type TextDocument {
     id: ID!
+    createdAt: DateTime!
+    authors: [Author!]!
+    variants: [TextVariant!]!
+}
+
+"""A language-specific variant of a text document."""
+type TextVariant {
+    id: ID!
+    languageCode: String!
     title: String!
-    author: String
-    type: TextDocumentType!
-    meta: JSON
+    createdAt: DateTime!
     paragraphs: [Paragraph!]!
 }
 
-enum TextDocumentType {
-  SPEECH
-  UNKNOWN
-}
+# """ An analysis of an existing text document. """
+# type TextAnalysis {
+#     id: ID!
+#     title: String!
+#     author: String
+#     paragraphs: [ParagraphAnalysis!]!
+# }
 
-""" A single paragraph of a text document. """
-type Paragraph {
-    id: ID!
-    text: String!
-}
+# """ A paragraph with the analysis of its text. """
+# type ParagraphAnalysis {
+#     id: ID!
+#     text: String!
+#     highlights: [Highlight!]!
+# }
 
-""" An analysis of an existing text document. """
-type TextAnalysis {
-    id: ID!
-    title: String!
-    author: String
-    paragraphs: [ParagraphAnalysis!]!
-}
+# """ A highlighted range within a paragraph. """
+# type Highlight {
+#     id: ID!
+#     start: Int!
+#     end: Int!
+# }
 
-""" A paragraph with the analysis of its text. """
-type ParagraphAnalysis {
-    id: ID!
-    text: String!
-    highlights: [Highlight!]!
-}
-
-""" A highlighted range within a paragraph. """
-type Highlight {
-    id: ID!
-    start: Int!
-    end: Int!
-}
-
-# ----- RESPONSE TYPES
-
-type CreateTextAnalysisResponse {
-    id: String
-}
-
-""" Response returned after removing a highlight. """
-type RemoveHighlightResponse {
-    success: Boolean!
-}
+# ----------------------------------
+# RESPONSE TYPES
+# ----------------------------------
 
 """ A summary of a text document """
 type TextDocumentSummary {
@@ -92,3 +102,12 @@ type TextDocumentSummary {
     title: String!
     author: String
 }
+
+# type CreateTextAnalysisResponse {
+#     id: String
+# }
+
+# """ Response returned after removing a highlight. """
+# type RemoveHighlightResponse {
+#     success: Boolean!
+# }
