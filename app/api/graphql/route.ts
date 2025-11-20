@@ -1,15 +1,15 @@
-import path from "path";
-import { readFileSync } from "fs";
-
 import { NextRequest, NextResponse } from "next/server";
 import { ApolloServer } from "@apollo/server";
-import { resolvers } from "./graphql-resolver-hub";
+
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 
 import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
 import logger from '@/lib/logger';
+
+import schema from './schema';
+import prisma from '@/lib/prisma';
 
 const originsFromEnv = process.env.ALLOWED_ORIGINS || '';
 const allowedOriginsPatterns = originsFromEnv.split(',').map(o => o.trim()).filter(Boolean);
@@ -24,27 +24,10 @@ logger.debug(`Effective allowed origins patterns loaded: ${allowedOriginsPattern
 
 
 
-let typeDefs: string;
-
-/* --- Load schema --- */
-
-try {
-
-    typeDefs = readFileSync(
-        path.join(process.cwd(), "app", "api", "graphql", "graphql-schema.gql"), "utf8"
-    );
-    logger.info("Schema loaded successfully");
-
-    } catch (error) {
-    logger.error("Error loading schema:", error);
-    throw error;
-}
-
 /* --- Create Apollo Server --- */
 
 const apolloServer = new ApolloServer({
-    typeDefs,
-    resolvers,
+    schema,
     plugins: [
         process.env.NODE_ENV === 'production'
             ? ApolloServerPluginLandingPageDisabled()
@@ -56,7 +39,7 @@ const apolloServer = new ApolloServer({
 /* --- Create Next Handler --- */
 
 const handler = startServerAndCreateNextHandler<NextRequest>(apolloServer, {
-    context: async (req) => ({ req }),
+    context: async (req) => ({ req, prisma }),
 });
 
 /* --- Helper Functions --- */

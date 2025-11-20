@@ -3,12 +3,23 @@
 // Every change needs to be followed by a `npx prisma generate` command to update the Prisma Client.
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider                = "postgresql"
+  url                     = env("DATABASE_URL")
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider                = "prisma-client-js"
+}
+
+generator pothos {
+  provider                = "prisma-pothos-types"
+  output                  = "../lib/pothos-prisma-types.ts"
+}
+
+generator zod {
+  provider                = "prisma-zod-generator"
+  output                  = "../lib/zod/generated"
+  addInputTypeValidation  = true
 }
 
 // ----------------------------------
@@ -24,11 +35,11 @@ model TextDocument {
   authors         Author[]          @relation("TextAuthors")
 
   /// Language-specific variants of this document.
-  variants        TextVariant[]
+  variants        TextLanguageVariant[]
 }
 
 /// A language-specific variant of a text document (ISO 639-1 language code).
-model TextVariant {
+model TextLanguageVariant {
   id              String            @id @default(cuid(2))
   languageCode    String                                          // e.g. "en", "de", "fr"
   title           String
@@ -51,9 +62,9 @@ model Paragraph {
   order           Int
   content         String
 
-  /// Reference to the parent TextVariant.
-  textVariant     TextVariant       @relation(fields: [textVariantId], references: [id])
-  textVariantId   String
+  /// Reference to the parent TextLanguageVariant.
+  textLanguageVariant     TextLanguageVariant       @relation(fields: [textLanguageVariantId], references: [id])
+  textLanguageVariantId   String
 }
 
 /// An author who writes or contributes to one or more text documents.
@@ -65,98 +76,3 @@ model Author {
   /// Documents authored or co-authored by this person.
   textDocuments   TextDocument[]    @relation("TextAuthors")
 }
-
-// ----------------------------------
-// TEXT ANALYSIS
-// ----------------------------------
-
-/*model TextAnalysis {
-  id                String                @id @default(auto()) @map("_id") @db.ObjectId
-
-  textDocumentId    String                @db.ObjectId
-  textDocument      TextDocument          @relation(fields: [textDocumentId], references: [id])
-
-  paragraphAnalyses ParagraphAnalysis[]
-}
-
-model ParagraphAnalysis {
-  id              String        @id @default(auto()) @map("_id") @db.ObjectId
-  
-  paragraphId     String        @db.ObjectId
-  paragraph       Paragraph     @relation(fields: [paragraphId], references: [id])
-
-  textAnalysisId  String        @db.ObjectId
-  textAnalysis    TextAnalysis  @relation(fields: [textAnalysisId], references: [id])
-  
-  highlights      Highlight[]
-}
-
-model Highlight {
-  id                  String            @id @default(auto()) @map("_id") @db.ObjectId
-  start               Int
-  end                 Int
-
-  paragraphAnalysisId String            @db.ObjectId
-  analysis            ParagraphAnalysis @relation(fields: [paragraphAnalysisId], references: [id])
-}*/
-
-/*
-  ----- NEXT-AUTH -----
-  From Auth.js: https://authjs.dev/getting-started/adapters/prisma 
-*/
-
-// This is the Account model used by Auth.js to store user accounts
-/*model Account {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String   @db.ObjectId
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?  @db.String
-  access_token      String?  @db.String
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?  @db.String
-  session_state     String?
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-// This is the Session model used by Auth.js to store user sessions
-model Session {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  sessionToken String   @unique
-  userId       String   @db.ObjectId
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-}
-
-model User {
-  id            String          @id @default(auto()) @map("_id") @db.ObjectId
-  name          String?
-  email         String?         @unique
-  emailVerified DateTime?
-  image         String?
-
-  role          UserRole        @default(USER)
-
-  accounts      Account[]
-  sessions      Session[]
-
-  createdAt                     DateTime @default(now())
-  updatedAt                     DateTime @updatedAt
-}
-
-enum UserRole {
-  USER
-  ADMIN
-}*/

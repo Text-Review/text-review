@@ -33,9 +33,6 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -46,3 +43,9 @@ node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# generated files
+lib/pothos-prisma-types.ts
+lib/zod/generated
+lib/graphql/generated
+schema.graphql

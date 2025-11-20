@@ -1,18 +1,20 @@
+import { Prisma } from "@prisma/client";
+
 import prisma from "@/lib/prisma";
-import { TextDocument } from "@prisma/client";
+import logger from "@/lib/logger";
 
-export type TextDocumentSummary = Pick<TextDocument, 'id' | 'title' | 'author'>;
+export default async function listTextDocumentsFromPrisma<T extends Prisma.TextDocumentFindManyArgs>(prismaArgs: T): Promise<Array<Prisma.TextDocumentGetPayload<T>>> {
 
-export default async function listTextDocumentsFromPrisma(): Promise<TextDocumentSummary[]> {
+    logger.debug('listTextDocuments: Infrastructure invoked');
 
-    const textDocumentSummaries = await prisma.textDocument.findMany({
-        select: {
-            id: true,
-            title: true,
-            author: true
-        }
+    const result = await prisma.textDocument.findMany({
+        ...prismaArgs,
+        orderBy: {
+            createdAt: 'desc',
+        },
+        ...prismaArgs
     });
 
-    return textDocumentSummaries;
+    return result as Array<Prisma.TextDocumentGetPayload<T>>;
 
 }

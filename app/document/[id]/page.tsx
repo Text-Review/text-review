@@ -4,7 +4,7 @@ import InvalidIdMessage from '@/services/text-documents/ui/components/InvalidIdM
 import getTextDocument from '@/services/text-documents/get-text-document/get-text-document.service';
 import ParagraphComponent from '@/services/text-documents/ui/components/ParagraphComponent';
 import TextDocumentNotFoundMessage from '@/services/text-documents/ui/components/TextDocumentNotFoundMessage';
-import { TextDocumentIdSchema } from '@/services/text-documents/text-document.model';
+import { TextDocumentIdSchema } from '@/services/text-documents/text-variant.model';
 import { JSX } from 'react';
 
 // Disable build time generation

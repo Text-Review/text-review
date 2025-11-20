@@ -1,21 +1,16 @@
+import { Prisma } from "@prisma/client";
+
 import logger from "@/lib/logger";
-
 import listTextDocumentsFromPrisma from "./list-text-documents.infrastructure";
-import { TextDocumentSummarySchema, TextDocumentSummary } from "@/services/text-documents/text-document-summary.model";
 
-export default async function listTextDocuments(): Promise<TextDocumentSummary[]> {
+export default async function listTextDocuments<T extends Prisma.TextDocumentFindManyArgs>(prismaArgs: T): Promise<Array<Prisma.TextDocumentGetPayload<T>>> {
 
-    logger.info('listTextDocuments: Service invoked');
-
-    // 1. Database request with Prisma
-
-    const rawSummaries = await listTextDocumentsFromPrisma();
-
+    logger.debug('listTextDocuments: Service invoked');
+    
     try {
-
-        // 2. Parse to Model
-
-        return TextDocumentSummarySchema.array().parse(rawSummaries);
+        
+        const result = await listTextDocumentsFromPrisma(prismaArgs);
+        return result;
 
     } catch (error) {
 

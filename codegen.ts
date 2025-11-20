@@ -1,14 +1,21 @@
 import { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
-    schema: 'app/api/graphql/graphql-schema.gql',
     documents: ['{app,services}/**/*.ts?(x)'],
+
     generates: {
         'lib/graphql/generated/': {
+            plugins: [],
             preset: 'client',
-            plugins: [  ]
+            presetConfig: {
+                fragmentMasking: false
+            }
         }
     },
+    overwrite: true,
+    schema: 'http://localhost:3000/api/graphql',
+    ignoreNoDocuments: true,
+
 }
 
 export default config;
