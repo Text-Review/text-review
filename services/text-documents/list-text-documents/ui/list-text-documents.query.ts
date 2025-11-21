@@ -1,11 +1,11 @@
-import { gql } from '@apollo/client';
+import { graphql } from '@/lib/graphql/generated';
 
-export const LIST_TEXT_DOCUMENTS = gql`
+export const LIST_TEXT_DOCUMENTS = graphql(`
     query TextDocuments {
         textDocuments {
-            id,
-            title,
+            id
+            title
             author
         }
     }
-`
+`);
