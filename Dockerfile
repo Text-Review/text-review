@@ -2,6 +2,7 @@
 # A lean and secure basis for all subsequent steps.
 FROM node:22-bookworm-slim AS base
 
+RUN apt-get update -y && apt-get install -y openssl ca-certificates
 
 # ----- STEP 2: Install necessary packages
 # Isolates the installation of dependencies to make optimal use of the Docker cache.
@@ -10,6 +11,8 @@ WORKDIR /app
 
 # Copy dependencies
 COPY package*.json ./
+COPY prisma ./prisma
+
 RUN npm ci
 
 
