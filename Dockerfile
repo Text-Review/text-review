@@ -29,6 +29,8 @@ ENV NEXT_VERBOSE=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+RUN npx prisma generate
+
 # Build the Next.js app
 RUN npm run build
 
