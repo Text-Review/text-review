@@ -1,7 +1,7 @@
 import { GraphQLResolveInfo } from "graphql";
 import logger from "@/lib/logger";
 
-import { Prisma, TextDocument } from "@prisma/client";
+import { Prisma, TextDocument } from "@/lib/generated/client/client";
 import listTextDocuments from "./list-text-documents.service";
 import { createApiError } from "@/services/shared/graphql/errors";
 

@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/lib/generated/client/client";
 
 import prisma from "@/lib/prisma";
 import logger from "@/lib/logger";
@@ -7,13 +7,14 @@ export default async function listTextDocumentsFromPrisma<T extends Prisma.TextD
 
     logger.debug('listTextDocuments: Infrastructure invoked');
 
-    const result = await prisma.textDocument.findMany({
-        ...prismaArgs,
-        orderBy: {
+    const finalArgs: Prisma.TextDocumentFindManyArgs = {
+        orderBy: {              // First orderBy - as default sort
             createdAt: 'desc',
         },
         ...prismaArgs
-    });
+    } satisfies Prisma.TextDocumentFindManyArgs;
+
+    const result = await prisma.textDocument.findMany(finalArgs);
 
     return result as Array<Prisma.TextDocumentGetPayload<T>>;
 

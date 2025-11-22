@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/lib/generated/client/client";
 
 import logger from "@/lib/logger";
 import listTextDocumentsFromPrisma from "./list-text-documents.infrastructure";
